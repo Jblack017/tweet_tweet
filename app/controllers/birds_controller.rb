@@ -1,7 +1,7 @@
 class BirdsController < ApplicationController
     def index
         @birds = Bird.all
-        render json: @birds
+        render json: @birds, include: :tree
     end
 
     def show
@@ -10,13 +10,20 @@ class BirdsController < ApplicationController
     end
 
     def create
-        @new_bird = Bird.create name: params[:name], wing_span: params[:wing_span]
-        render json: @new_bird
+        @tree = Tree.where(name: params[:tree_name]).ids[0]
+        if !@tree
+            new_tree = Tree.create(name: params[:tree_name])
+            @new_bird = Bird.create name: params[:name], wing_span: params[:wing_span], tree_id: new_tree.id
+            return render json: @new_bird
+        else
+            @new_bird = Bird.create name: params[:name], wing_span: params[:wing_span], tree_id: @tree
+            return render json: @new_bird
+        end
     end
 
     def update
         @bird = Bird.find params[:id]
-        @bird.update name: params[:name], wing_span: params[:wing_span]
+        @bird.update name: params[:name], wing_span: params[:wing_span], tree_id: params[:tree_id]
         render json: @bird
     end
     
